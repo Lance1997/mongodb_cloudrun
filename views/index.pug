@@ -1,0 +1,15 @@
+extends layout.pug
+
+block scripts
+  script(src='/app.js')
+
+block content
+
+    div.mx-auto.col-md-6.text-center
+        if market_data == null
+            h2.font-weight-bold Oops
+            p.description= You have not received any data just yet!
+        else
+            code.code
+                #{market_data}
+    
