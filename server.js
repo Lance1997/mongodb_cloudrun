@@ -1,6 +1,6 @@
 'use strict'
 
-require('dotenv')
+require('dotenv').config()
 //import packages
 
 var MongoClient = require('mongodb').MongoClient;
@@ -12,46 +12,59 @@ const app = express();
 //const bodyParser = require('body-parser');
 process.env.NODE_ENV = 'development'
 
-app.use(express.static(__dirname + "public"))
+app.use(express.static(__dirname + "/public"))
 app.set('view engine', 'pug')
 app.set('views', './views')
 // app.use(bodyParser.urlencoded(false))
 
 function getData(db_name,collection_name,callback) {
+    let dbConnection;
     try {
         MongoClient.connect(atlas_connection_uri,{ useUnifiedTopology: true }, function (err, client) {
             dbConnection = client.db(db_name);
             if(err) {
-                callback(null, "Could not connect to database")
+                console.log(err)
+                callback(null,"Could not connect to database.")
             }
             else {
-                listDocs(dbConnection,collection_name, callback);
+                listDocs(dbConnection,collection_name, function(err,result) {
+                    callback(null, result)
+                })
             }
         });
     }
     catch (err) {
         console.log(err);
-        callback(null,"Error connection to database")
+        callback(null,err)
     }
 }
 
-function listDocs(db,name, callback) {
-    db.collection(name).find(json, function(err, result) {
-        if(err!=null) {
-            console.log("an error occurred in findDoc: "+ err);
-            callback(null, "Error retrieving documents.");
-        }
-        else {
-            console.log("Retrieved collections");
-            callback(null, result);
-        }
+function listDocs(db,name,callback) {
+    db.collection(name).find().toArray() 
+    .then(data => {
+        console.log("Retrieved collections");
+        console.log("Results: ")
+        console.log(data)
+        callback(null,data);
+    })
+    .catch(err => {
+        console.log("an error occurred in findDoc: "+ err);
+        callback(null,"Error retrieving documents.");
     })
 }
 
-app.get('/', function (req, res) {
-    //make request
-    const result = getData(process.env.DB_NAME,process.env.COLLECTION_NAME);
-    res.render('index', { title: 'VDC.cloud Testing PubSub', market_data: result});
+app.get('/data', function(req,res) {
+    getData(process.env.DB_NAME,process.env.COLLECTION_NAME, function(err,result) {
+        res.json({statusCode: 200, body: result})
+    })
 })
 
-app.listen(3000 || process.env.PORT, 'localhost');
+
+app.get('/', function (req, res) {
+    //make request
+    res.render('index', { title: 'VDC.cloud Testing PubSub'});
+})
+
+app.listen(3000 || process.env.PORT, () => {
+    console.log(`Example app listening at http://localhost:${3000 || process.env.PORT}`);
+})
