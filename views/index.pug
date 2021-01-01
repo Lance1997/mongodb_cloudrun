@@ -1,15 +1,68 @@
 extends layout.pug
 
-block scripts
+block script
   script(src='/app.js')
+  script(src='https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js')
+  script.
+        $(document).ready(function(){
+            $("#refresh_button").on('click', function() {
+                $("#refresh_button").html("loading...")
+                $.ajax({
+                    url: "/data",
+                    method: "GET",
+                    success: function(result){
+                        console.log(result)
+                        const json_data = result.body
+                        const object_keys = Object.keys(json_data)
+                        $("#market-data").html("")
+                        for(let i=0; i < json_data.length; i++) {
+                            $("#market-data").append(`
+                                <h3>${i+1}</h3>
+                            `)
+                            const keys = Object.keys(json_data[i]);
+                            for(let j=0; j < keys.length; j++) {
+                                
+                                console.log(keys)
+                                if(keys[j] !== "_id") {
+                                    $("#market-data").append(`
+                                        <div class="list-group">
+                                            <a href="#" class="list-group-item list-group-item-action">
+                                                <div class="d-flex w-100 justify-content-between">
+                                                <h5 class="mb-1">${keys[j]}</h5>
+                                                </div>
+                                                <p class="mb-1">${typeof(json_data[i][keys[j]]) == "string" ? json_data[i][keys[j]]: JSON.stringify(json_data[i][keys[j]])}</p>
+                                            </a>
+                                        </div>
+                                    `)
+                                }
+                            }
+                            
+                        }
+                        $("#refresh_button").html(`<svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-arrow-repeat" viewBox="0 0 16 16">
+                        <path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z"/>
+                        <path fill-rule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5.002 5.002 0 0 0 8 3zM3.1 9a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9H3.1z"/>
+                        </svg>`);
+                    },
+                    error: function(err) {
+                        console.log(err);
+                        $("#refresh_button").html(`<svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-arrow-repeat" viewBox="0 0 16 16">
+                        <path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z"/>
+                        <path fill-rule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5.002 5.002 0 0 0 8 3zM3.1 9a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9H3.1z"/>
+                        </svg>`);
+                    }
+                });
+            })
+        });
 
 block content
+    div.my-5
+            button(class="btn btn-rounded btn-success shadow shadow-lg float-end" id="refresh_button") 
+                svg(xmlns="http://www.w3.org/2000/svg", width="25", height="25", fill="currentColor", class="bi bi-arrow-repeat", viewBox="0 0 16 16")
+                    path(d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z")
+                    path(fill-rule="evenodd", d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5.002 5.002 0 0 0 8 3zM3.1 9a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9H3.1z")
+    div(class="mx-auto col-md-6 text-center")
+        h2.my-5 PubSub Data Goes Here
+        p.text-left 
+            code(id="market-data") Refresh page to get data from Database
 
-    div.mx-auto.col-md-6.text-center
-        if market_data == null
-            h2.font-weight-bold Oops
-            p.description= You have not received any data just yet!
-        else
-            code.code
-                #{market_data}
     
